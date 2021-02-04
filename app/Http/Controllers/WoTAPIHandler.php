@@ -6,18 +6,12 @@ namespace App\Http\Controllers;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Psr\Http\Message\StreamInterface;
 
 class WoTAPIHandler extends Controller
 {
     /** TODO Set global variables */
-
-    /**
-     * Guzzle client
-     *
-     * @var object
-     */
-    protected $client;
 
     /**
      * Application ID for WoT API
@@ -34,6 +28,14 @@ class WoTAPIHandler extends Controller
     protected $account_id;
 
     /**
+     * Holds the access token from World of Tanks if it's given.
+     * Defaults as empty string
+     *
+     * @var string
+     */
+    protected $access_token;
+
+    /**
      * Base WoT API URL
      *
      * @var string
@@ -45,10 +47,7 @@ class WoTAPIHandler extends Controller
      */
     public function __construct()
     {
-        $this->client = new Client([
-            'base_uri' => 'https://api.worldoftanks.eu/wot/',
-        ]);
-
+        $this->access_token = '';
         $this->baseUrl = 'https://api.worldoftanks.eu/wot/';
         $this->application_id = '6ff2cfd3d752aed10e2e31b44c3095a8';
     }
@@ -56,22 +55,46 @@ class WoTAPIHandler extends Controller
     /**
      * Over here, we want to call the WoT API to get the AccountID based on the Username
      *
-     * @param Request $request
-     * @throws GuzzleException
+     * @param string $username
+     * @return string
      */
-    public function getAccountID(Request $request)
+    public function getAccountID(string $username)
     {
-        $response = $this->client->get('account/list/', [
-            'query' => [
-                'application_id' => $this->application_id,
-                'search' => $request['username']
-            ]
+        $response = Http::get($this->baseUrl . 'account/list/', [
+            'application_id' => $this->application_id,
+            'search' => $username
         ]);
-        $body = json_decode($response->getBody(), true);
 
-        return 'Account ID = ' . $body['data'][0]['account_id'];
-        //Call WOT API with given username
+        $body = $response->json();
+
+        return $body['data'][0]['account_id'];
     }
+
+    /**
+     * Get all the personal player data
+     *
+     * @param Request $request
+     * @return mixed
+     */
+    public function getPlayerPersonalData(Request $request)
+    {
+        $this->account_id = $this->getAccountID($request['username']);
+
+        if(isset($request['access_token']) && $request['access_token'] != '')
+            $this->access_token = $request['access_token'];
+
+        $response = Http::get($this->baseUrl . 'account/info/', [
+            'application_id' => $this->application_id,
+            'account_id' => $this->account_id,
+            'access_token' => $this->access_token
+        ]);
+
+        $body = $response->json();
+
+        return $body['data'];
+    }
+
+
 
     /**
      *  TODO move this to another class

@@ -18,4 +18,4 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/account', [WoTAPIHandler::class, 'getAccountID']);
+Route::get('/account', [WoTAPIHandler::class, 'getPlayerPersonalData']);
