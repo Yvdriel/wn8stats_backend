@@ -3,11 +3,9 @@
 
 namespace App\Http\Controllers;
 
-use GuzzleHttp\Client;
-use GuzzleHttp\Exception\GuzzleException;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
-use Psr\Http\Message\StreamInterface;
 
 class WoTAPIHandler extends Controller
 {
@@ -44,9 +42,14 @@ class WoTAPIHandler extends Controller
 
     /**
      * WoTAPIHandler constructor
+     *
+     * TODO Predefine the regions and predefine the calls that are allowed to make.
      */
     public function __construct()
     {
+        /**
+         * TODO Find some neat way to gather the region the players are in.
+         */
         $this->access_token = '';
         $this->baseUrl = 'https://api.worldoftanks.eu/wot/';
         $this->application_id = '6ff2cfd3d752aed10e2e31b44c3095a8';
@@ -57,8 +60,9 @@ class WoTAPIHandler extends Controller
      *
      * @param string $username
      * @return string
+     * @throws Exception
      */
-    public function getAccountID(string $username)
+    public function getAccountID(string $username = ''): string
     {
         $response = Http::get($this->baseUrl . 'account/list/', [
             'application_id' => $this->application_id,
@@ -66,6 +70,10 @@ class WoTAPIHandler extends Controller
         ]);
 
         $body = $response->json();
+
+        /** TODO Make this an error handler that is able to handle the WoT errors */
+        if(isset($body['status']) && $body['status'] == 'error')
+            Throw new Exception($body['error']);
 
         return $body['data'][0]['account_id'];
     }
@@ -75,6 +83,7 @@ class WoTAPIHandler extends Controller
      *
      * @param Request $request
      * @return mixed
+     * @throws Exception
      */
     public function getPlayerPersonalData(Request $request)
     {
@@ -88,6 +97,38 @@ class WoTAPIHandler extends Controller
             'account_id' => $this->account_id,
             'access_token' => $this->access_token
         ]);
+
+        $body = $response->json();
+
+
+        return $body['data'];
+    }
+
+    /**
+     * Abstract API handler, this will handle most requests given to it.
+     *
+     * @param Request $request
+     * @return mixed
+     * @throws Exception
+     */
+    public function APIHandler(Request $request)
+    {
+        $this->account_id = $this->getAccountID($request['username']);
+
+        if (isset($request['access_token']) && $request['access_token'] != '')
+            $this->access_token = $request['access_token'];
+
+        try {
+            $response = Http::get($this->baseUrl . 'account/' . $request['requestType'], [
+                'application_id' => $this->application_id,
+                'account_id' => $this->account_id,
+                'access_token' => $this->access_token
+            ]);
+        } catch(Exception $e) {
+            Throw new Exception($e);
+        }
+
+        if($response->status() != 200)
 
         $body = $response->json();
 
