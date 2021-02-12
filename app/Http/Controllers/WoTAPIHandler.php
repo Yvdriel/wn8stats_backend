@@ -3,6 +3,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\WoTException;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -60,7 +61,7 @@ class WoTAPIHandler extends Controller
      *
      * @param string $username
      * @return string
-     * @throws Exception
+     * @throws WoTException
      */
     public function getAccountID(string $username = ''): string
     {
@@ -73,7 +74,7 @@ class WoTAPIHandler extends Controller
 
         /** TODO Make this an error handler that is able to handle the WoT errors */
         if(isset($body['status']) && $body['status'] == 'error')
-            Throw new Exception($body['error']);
+            throw new WoTException($body['status'], $body['error']);
 
         return $body['data'][0]['account_id'];
     }
@@ -87,19 +88,22 @@ class WoTAPIHandler extends Controller
      */
     public function getPlayerPersonalData(Request $request)
     {
-        $this->account_id = $this->getAccountID($request['username']);
+        try {
+            $this->account_id = $this->getAccountID($request['username']);
 
-        if(isset($request['access_token']) && $request['access_token'] != '')
-            $this->access_token = $request['access_token'];
+            if(isset($request['access_token']) && $request['access_token'] != '')
+                $this->access_token = $request['access_token'];
 
-        $response = Http::get($this->baseUrl . 'account/info/', [
-            'application_id' => $this->application_id,
-            'account_id' => $this->account_id,
-            'access_token' => $this->access_token
-        ]);
+            $response = Http::get($this->baseUrl . 'account/info/', [
+                'application_id' => $this->application_id,
+                'account_id' => $this->account_id,
+                'access_token' => $this->access_token
+            ]);
 
-        $body = $response->json();
-
+            $body = $response->json();
+        } catch(WoTException $e) {
+            dd($e->getArray());
+        }
 
         return $body['data'];
     }
