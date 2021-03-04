@@ -18,4 +18,5 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+Route::get('/openIDLogin', [WoTAPIHandler::class, 'openIDLogin']);
 Route::get('/account', [WoTAPIHandler::class, 'getPlayerPersonalData']);

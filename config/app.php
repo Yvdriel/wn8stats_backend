@@ -229,4 +229,10 @@ return [
 
     ],
 
+    'Realms' => [
+        'ru' => 'https://api.worldoftanks.ru/wot/',
+        'eu' => 'https://api.worldoftanks.eu/wot/',
+        'na' => 'https://api.worldoftanks.com/wot/',
+        'asia' => 'https://api.worldoftanks.asia/wot/'
+    ],
 ];
