@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\WoTAPIHandler;
+use App\Http\Resources\Wn8Collection;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -17,6 +18,5 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
-
 Route::get('/openIDLogin', [WoTAPIHandler::class, 'openIDLogin']);
 Route::get('/account', [WoTAPIHandler::class, 'getPlayerPersonalData']);

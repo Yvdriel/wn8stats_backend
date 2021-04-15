@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Wn8Controller;
+use App\Http\Controllers\WoTAPIHandler;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -15,5 +17,8 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::middleware('auth:api')->get('/user', function (Request $request) {
-    return $request->user();
+    return $request;
 });
+
+Route::middleware('auth:api')->get('/wn8', [WoTAPIHandler::class, 'openIDLogin']);
+//Route::get('/test', [WoTAPIHandler::class, 'openIDLogin']);
